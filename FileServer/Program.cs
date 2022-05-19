@@ -1,34 +1,33 @@
+using Microsoft.Extensions.FileProviders;
+
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    RequestPath = "/Files",
+    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "Files")),
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/files.json", () =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-       new WeatherForecast
-       (
-           DateTime.Now.AddDays(index),
-           Random.Shared.Next(-20, 55),
-           summaries[Random.Shared.Next(summaries.Length)]
-       ))
-        .ToArray();
-    return forecast;
+    return new Folder { Name = "root" };
 });
 
 app.Run();
 
-internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
+
+public class Folder
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public string Name { get; set; }
+    public List<Folder> SubFolders { get; set; }
+    public List<File> Files { get; set; }
+
+}
+
+public class File
+{
+    public string Name { get; set; }
 }
